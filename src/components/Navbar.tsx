@@ -76,7 +76,7 @@ const Navbar = () => {
                 CREDIT
               </p>
               <p className="text-xs sm:text-sm md:text-base lg:text-base">
-                $300.00
+              ${loading ? "..." : user.credit.toFixed(2)}
               </p>
             </div>
             <div>
