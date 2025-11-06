@@ -20,15 +20,15 @@ export class WebSocketClient {
         this._ws.readyState === WebSocket.OPEN &&
         this.url === url
       ) {
-        console.log(
-          "WebSocket already connected to this URL. Reusing connection."
-        );
+        // console.log(
+        //   "WebSocket already connected to this URL. Reusing connection."
+        // );
         return;
       }
 
       // If there's an existing connection, close it first
       if (this._ws) {
-        console.log("Closing existing connection before creating a new one");
+        // console.log("Closing existing connection before creating a new one");
         this.disconnect();
       }
 
@@ -43,19 +43,19 @@ export class WebSocketClient {
     // If we already have an active connection, don't create a new one
     if (this._ws) {
       if (this._ws.readyState === WebSocket.OPEN) {
-        console.log("WebSocket is already OPEN - not creating a new one");
+        // console.log("WebSocket is already OPEN - not creating a new one");
         return;
       } else if (this._ws.readyState === WebSocket.CONNECTING) {
-        console.log("WebSocket is already CONNECTING - not creating a new one");
+        // console.log("WebSocket is already CONNECTING - not creating a new one");
         return;
       }
     }
 
-    console.log("Creating new WebSocket connection");
+    // console.log("Creating new WebSocket connection");
     this._ws = new WebSocket(url);
 
     this._ws.addEventListener("open", () => {
-      console.log("Connected");
+      // console.log("Connected");
       this.reconnectAttempts = 0; // Reset reconnect attempts on successful connection
       this.reconnectTimeout = 1000; // Reset timeout to initial value
 
@@ -75,7 +75,7 @@ export class WebSocketClient {
     });
 
     this._ws.addEventListener("close", (event) => {
-      console.log("Disconnected", event);
+      // console.log("Disconnected", event);
 
       // Don't attempt to reconnect if it was an intentional close
       if (!this.isIntentionalClose) {
@@ -98,13 +98,13 @@ export class WebSocketClient {
 
     // Don't reconnect if we already have an active connection
     if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-      console.log("No need to reconnect - WebSocket is already OPEN");
+      // console.log("No need to reconnect - WebSocket is already OPEN");
       return false;
     }
 
     // Don't reconnect if we're in the process of connecting
     if (this._ws && this._ws.readyState === WebSocket.CONNECTING) {
-      console.log("No need to reconnect - WebSocket is already CONNECTING");
+      // console.log("No need to reconnect - WebSocket is already CONNECTING");
       return false;
     }
 
@@ -131,9 +131,9 @@ export class WebSocketClient {
         this.reconnectTimeout * Math.pow(1.5, this.reconnectAttempts - 1)
       );
 
-      console.log(
-        `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts} of ${this.maxReconnectAttempts})`
-      );
+      // console.log(
+      //   `Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts} of ${this.maxReconnectAttempts})`
+      // );
 
       // Broadcast reconnection attempt event
       if (typeof window !== "undefined") {
@@ -142,7 +142,7 @@ export class WebSocketClient {
       }
 
       this.reconnectTimer = setTimeout(() => {
-        console.log(`Reconnecting... (attempt ${this.reconnectAttempts})`);
+        // console.log(`Reconnecting... (attempt ${this.reconnectAttempts})`);
         this.createWebSocket(this.url);
       }, delay);
     } else {
@@ -176,9 +176,9 @@ export class WebSocketClient {
       // If we're trying to send messages but not connected,
       // we might need to reconnect
       if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
-        console.log(
-          "WebSocket is closed but messages are being sent. Attempting to reconnect..."
-        );
+        // console.log(
+        //   "WebSocket is closed but messages are being sent. Attempting to reconnect..."
+        // );
         this.reconnect();
       }
     }
@@ -206,7 +206,7 @@ export class WebSocketClient {
       (this._ws.readyState === WebSocket.OPEN ||
         this._ws.readyState === WebSocket.CONNECTING)
     ) {
-      console.log("Disconnecting before manual reconnect");
+      // console.log("Disconnecting before manual reconnect");
       this.disconnect();
     }
 
@@ -217,7 +217,7 @@ export class WebSocketClient {
 
     // Only try to connect if we have a URL
     if (this.url) {
-      console.log("Manually reconnecting...");
+      // console.log("Manually reconnecting...");
       this.connect(this.url);
     } else {
       console.error("Cannot reconnect - no URL available");

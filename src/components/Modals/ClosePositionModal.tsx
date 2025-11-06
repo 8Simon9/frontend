@@ -113,6 +113,11 @@ const ClosePositionModal: React.FC<ModalProps> = ({ modal }) => {
   };
 
   const submitTrade = async () => {
+    console.log("=== CLOSE POSITION DEBUG START ===");
+    console.log("Selected transaction:", selectedTransaction);
+    console.log("Current price:", currentPrice);
+    console.log("Profit/Loss:", profitLoss);
+
     // Clear previous messages
     setErrorMessage("");
     setSuccessMessage("");
@@ -132,8 +137,7 @@ const ClosePositionModal: React.FC<ModalProps> = ({ modal }) => {
         id: selectedTransaction?.id,
       };
 
-      // Use the Next.js API route to proxy the request
-      console.log("tradeData", tradeData);
+      console.log("Trade data being sent:", tradeData);
 
       const endpoint = `/api/trade/close`;
 
@@ -146,6 +150,11 @@ const ClosePositionModal: React.FC<ModalProps> = ({ modal }) => {
       });
 
       const data = await response.json();
+      console.log("Backend response:", {
+        status: response.status,
+        ok: response.ok,
+        data: data,
+      });
 
       if (!response.ok) {
         throw new Error(data.message || `Failed to close trade`);
@@ -160,20 +169,31 @@ const ClosePositionModal: React.FC<ModalProps> = ({ modal }) => {
               meta_data: {
                 ...transaction.meta_data,
                 closedAt: currentPrice?.toString(),
-                profitLoss:
-                  (profitLoss?.amount || 0) +
-                  parseInt(transaction.meta_data.boughtAt),
+                profitLoss: profitLoss?.amount || 0, // FIXED: removed incorrect addition
                 profitLossPercentage: profitLoss?.percentage,
               },
             }
           : transaction
       );
 
+      console.log("Updated transactions:", newTransactions);
       dispatch(setTransactions(newTransactions));
-      dispatch(fetchProfileDetails());
+
+      console.log("Dispatching fetchProfileDetails...");
+      try {
+        const profileResult = await dispatch(fetchProfileDetails()).unwrap();
+        console.log("Profile refresh result:", profileResult);
+      } catch (profileError) {
+        console.error("Profile refresh failed:", profileError);
+        setErrorMessage(
+          "Position closed but balance may not reflect immediately"
+        );
+      }
+
+      console.log("=== CLOSE POSITION DEBUG END ===");
       modal.close();
     } catch (error) {
-      // Handle and display errors
+      console.error("Close position error:", error);
       setErrorMessage(
         error instanceof Error ? error.message : "An unknown error occurred"
       );

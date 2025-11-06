@@ -25,14 +25,15 @@ const initialState: InitialState = {
 export const fetchProfileDetails = createAsyncThunk(
   "user/fetch-profile",
   async (_, { rejectWithValue }) => {
+    console.log("fetchProfileDetails: Starting...");
     try {
       const response = await axios.get(`/api/user/profile`);
-      console.log("fetch profile result", response);
+      console.log("fetchProfileDetails: Response status:", response.status);
 
       if (response.status === 200) {
         return response.data.data;
       } else {
-        throw new Error();
+        throw new Error(response.data.message || "Failed to fetch profile");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
