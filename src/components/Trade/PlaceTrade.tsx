@@ -18,9 +18,9 @@ const PlaceTrade: React.FC<{
   // State management
   const [activeTab, setActiveTab] = useState("open");
   const [quantity, setQuantity] = useState(balance + credit);
-  const [margin, setMargin] = useState(257);
+  const [margin, setMargin] = useState(0);
   const [leverage, setLeverage] = useState(200);
-  const [change, setChange] = useState(-0.3);
+  const [change, setChange] = useState(0);
   const [isHoveringBuy, setIsHoveringBuy] = useState(false);
   const [isHoveringSell, setIsHoveringSell] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +33,31 @@ const PlaceTrade: React.FC<{
 
   const dispatch = useDispatch<AppDispatch>();
 
+  // Initialize margin when component mounts or balance changes
+  useEffect(() => {
+    updateMarginFromQuantity(quantity);
+  }, [leverage, quantity]);
+
+  // Calculate price change percentage when prices update
+  useEffect(() => {
+    if (selectedPairPrice?.bid && selectedPairPrice?.ask) {
+      // Calculate mid price
+      const midPrice = (selectedPairPrice.bid + selectedPairPrice.ask) / 2;
+      // This would need historical data to calculate real change
+      // For now, calculate spread as a placeholder
+      const spread =
+        ((selectedPairPrice.ask - selectedPairPrice.bid) / midPrice) * 100;
+      setChange(spread);
+    }
+  }, [selectedPairPrice]);
+
+  // Helper function to update margin based on quantity and leverage
+  const updateMarginFromQuantity = (qty: number) => {
+    // Correct margin calculation: position size / leverage
+    const newMargin = qty / leverage;
+    setMargin(newMargin);
+  };
+
   // Handle quantity changes with balance validation
   const increaseQuantity = () => {
     let newQuantity;
@@ -42,7 +67,7 @@ const PlaceTrade: React.FC<{
       newQuantity = quantity + (balance + credit) / 100;
     }
     // Calculate new margin to check against balance
-    const newMargin = Math.round((newQuantity / leverage) * 0.01);
+    const newMargin = newQuantity / leverage;
 
     // Only allow increase if user has sufficient balance
     if (newMargin <= balance + credit) {
@@ -62,10 +87,18 @@ const PlaceTrade: React.FC<{
     }
   };
 
-  // Helper function to update margin based on quantity and leverage
-  const updateMarginFromQuantity = (qty: number) => {
-    const newMargin = Math.round((qty / leverage) * 0.01);
-    setMargin(newMargin);
+  // Handle manual quantity input
+  const handleQuantityChange = (value: string) => {
+    const numValue = parseFloat(value) || 0;
+
+    if (numValue > balance + credit) {
+      setQuantity(balance + credit);
+      updateMarginFromQuantity(balance + credit);
+      return;
+    }
+
+    setQuantity(numValue);
+    updateMarginFromQuantity(numValue);
   };
 
   // Tab switching
@@ -82,9 +115,16 @@ const PlaceTrade: React.FC<{
     setSuccessMessage("");
 
     if (quantity === 0) {
-      setErrorMessage("increase quantity");
+      setErrorMessage("Increase quantity");
       return;
     }
+
+    // Validate margin
+    if (margin > balance + credit) {
+      setErrorMessage("Insufficient balance for required margin");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -98,13 +138,13 @@ const PlaceTrade: React.FC<{
       let price;
       if (activeTab === "open") {
         price =
-          action === "buy" ? selectedPairPrice.bid : selectedPairPrice.ask;
+          action === "buy" ? selectedPairPrice.ask : selectedPairPrice.bid;
       } else {
         // For limit orders, use the manually entered price
         if (!limitPrice) {
           throw new Error("Please enter a limit price");
         }
-        price = limitPrice;
+        price = parseFloat(limitPrice);
       }
 
       const tradeData = {
@@ -112,6 +152,7 @@ const PlaceTrade: React.FC<{
           pair: pairName,
           leverage: leverage,
           margin: margin,
+          quantity: quantity, // Add quantity to meta_data
           order_type: activeTab === "open" ? "market" : "limit",
           boughtAt: price.toString(),
           profitLoss: 0,
@@ -133,8 +174,6 @@ const PlaceTrade: React.FC<{
 
       const data = await response.json();
 
-      console.log("response", response);
-
       if (!response.ok) {
         throw new Error(data.message || `Failed to ${action} trade`);
       }
@@ -144,15 +183,11 @@ const PlaceTrade: React.FC<{
         `${action.toUpperCase()} order submitted successfully!`
       );
 
-      //   update user balance
-      // dispatch(
-      //   setUser({ ...user.user, balance: user.user.balance - quantity })
-      // );
+      // Update user balance
       dispatch(fetchProfileDetails());
-
       fetchTransactions(currentPage);
 
-      // Optionally reset form or refresh data
+      // Reset form
       if (activeTab === "limit") {
         setLimitPrice("");
       }
@@ -166,8 +201,8 @@ const PlaceTrade: React.FC<{
     }
   };
 
-  const buyPrice = selectedPairPrice?.bid || "Loading...";
-  const sellPrice = selectedPairPrice?.ask || "Loading...";
+  const buyPrice = selectedPairPrice?.ask || "Loading...";
+  const sellPrice = selectedPairPrice?.bid || "Loading...";
 
   if (!selectedPair) {
     return (
@@ -204,13 +239,7 @@ const PlaceTrade: React.FC<{
 
       <div className="flex flex-col px-5 mt-5">
         <div className="flex justify-between items-center pb-6 border-b border-gray-700">
-          <h2 className="text-2xl text-white font-semibold">
-            {/* {selectedFeed !== "commodity"
-              ? `${selectedPair.slice(0, 3)}/${selectedPair.slice(3)}`
-              : selectedPair} */}
-            {selectedPair}
-          </h2>
-          {/* <p className="text-blue-500 text-lg">{selectedFeed}</p> */}
+          <h2 className="text-2xl text-white font-semibold">{selectedPair}</h2>
         </div>
 
         {/* Balance display */}
@@ -224,19 +253,30 @@ const PlaceTrade: React.FC<{
         <div className="flex justify-between items-center mt-3">
           <p className="text-gray-400">LEVERAGE:</p>
           <div className="flex items-center">
-            <span className="text-white font-semibold mr-1">1:200</span>
+            <span className="text-white font-semibold mr-1">1:{leverage}</span>
           </div>
         </div>
+
         <div className="flex justify-between items-center mt-3">
-          <p className="text-gray-400">CHANGE:</p>
+          <p className="text-gray-400">SPREAD:</p>
           <div className="flex items-center">
-            <span className="text-green-500 font-semibold mr-1">1.5%</span>
+            <span
+              className={`font-semibold mr-1 ${
+                change >= 0 ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {change >= 0 ? "+" : ""}
+              {change.toFixed(4)}%
+            </span>
           </div>
         </div>
+
         <div className="flex justify-between items-center mt-3">
-          <p className="text-gray-400">MARGIN:</p>
+          <p className="text-gray-400">MARGIN REQUIRED:</p>
           <div className="flex items-center">
-            <span className="text-green-500 font-semibold mr-1">$200</span>
+            <span className="text-white font-semibold mr-1">
+              ${margin.toFixed(2)}
+            </span>
           </div>
         </div>
 
@@ -248,19 +288,12 @@ const PlaceTrade: React.FC<{
             <FaMinus size={24} />
           </button>
           <div className="flex flex-col items-center gap-1">
-            {/* <h1 className="text-2xl">{quantity.toLocaleString()}</h1> */}
             <input
               className="text-2xl bg-transparent text-center focus:outline-none w-full"
               type="number"
               name="quantity"
               value={quantity.toFixed(2)}
-              onChange={(e) => {
-                if (parseInt(e.target.value) > balance + credit) {
-                  setQuantity(balance + credit);
-                  return;
-                }
-                setQuantity(parseInt(e.target.value));
-              }}
+              onChange={(e) => handleQuantityChange(e.target.value)}
             />
             <p className="text-sm">USD</p>
           </div>
@@ -289,8 +322,8 @@ const PlaceTrade: React.FC<{
           disabled={
             isLoading ||
             isSubmitting ||
-            margin > (balance + credit) ||
-            (balance + credit) <= 0
+            margin > balance + credit ||
+            balance + credit <= 0
           }
           className="w-full flex justify-between mt-8 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"
           onMouseEnter={() => setIsHoveringBuy(true)}
@@ -304,7 +337,12 @@ const PlaceTrade: React.FC<{
         </button>
 
         <button
-          disabled={isLoading || isSubmitting || margin > (balance + credit) || (balance + credit) <= 0}
+          disabled={
+            isLoading ||
+            isSubmitting ||
+            margin > balance + credit ||
+            balance + credit <= 0
+          }
           className="w-full flex justify-between mt-6 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"
           onMouseEnter={() => setIsHoveringSell(true)}
           onMouseLeave={() => setIsHoveringSell(false)}
