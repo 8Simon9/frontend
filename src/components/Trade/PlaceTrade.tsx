@@ -19,7 +19,7 @@ const PlaceTrade: React.FC<{
   const [activeTab, setActiveTab] = useState("open");
   const [quantity, setQuantity] = useState(balance + credit);
   const [margin, setMargin] = useState(0);
-  const [leverage, setLeverage] = useState(200);
+  const [leverage, setLeverage] = useState(30);
   const [change, setChange] = useState(0);
   const [isHoveringBuy, setIsHoveringBuy] = useState(false);
   const [isHoveringSell, setIsHoveringSell] = useState(false);
@@ -323,6 +323,7 @@ const PlaceTrade: React.FC<{
             isLoading ||
             isSubmitting ||
             margin > balance + credit ||
+            balance <= 0 || // Require positive balance
             balance + credit <= 0
           }
           className="w-full flex justify-between mt-8 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"
@@ -336,11 +337,18 @@ const PlaceTrade: React.FC<{
           <p className="text-white">{buyPrice}</p>
         </button>
 
+        {balance <= 0 && (
+          <div className="bg-yellow-900/30 border border-yellow-500 text-yellow-500 rounded p-2 mt-4">
+            Deposit funds required. Cannot trade on credit alone.
+          </div>
+        )}
+
         <button
           disabled={
             isLoading ||
             isSubmitting ||
             margin > balance + credit ||
+            balance <= 0 || // Require positive balance
             balance + credit <= 0
           }
           className="w-full flex justify-between mt-6 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"

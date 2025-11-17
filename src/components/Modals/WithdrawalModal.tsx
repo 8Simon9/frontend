@@ -269,7 +269,7 @@ const WithdrawalModal: React.FC<ModalProps> = ({ modal }) => {
                     >
                       <div>
                         <p className="text-white mb-2">
-                          Amount (Available: {balance} USDT)
+                          Amount (Available: {balance.toFixed(2)} USDT)
                         </p>
                         <div className="flex">
                           <input
