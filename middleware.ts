@@ -41,6 +41,6 @@ export const config = {
      * 4. /_vercel (Vercel internals)
      * 5. Static files like favicon.ico, robots.txt, etc.
      */
-    "/((?!_next|public|_vercel|favicon.ico|robots.txt|sitemap.xml).*)",
+    "/((?!_next|public|_vercel|favicon.ico|robots.txt|sitemap.xml|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.webp).*)",
   ],
 };
