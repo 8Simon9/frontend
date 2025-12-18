@@ -18,7 +18,7 @@ const Banner = () => {
         <p className="max-w-[600px] text-sm md:text-[1rem] font-normal mt-6 text-white text-center">
           Ensure profitability and resilience by optimizing your trading
           strategy with advantageous conditions for precious metals, energies,
-          crypto, eqwuity investments, and FX.
+          crypto, equity investments, and FX.
         </p>
 
         <div className="mt-10 flex flex-wrap md:flex-nowrap justify-center  gap-5 md:gap-20">
