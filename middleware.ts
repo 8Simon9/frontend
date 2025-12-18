@@ -12,7 +12,9 @@ export function middleware(request: NextRequest) {
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/register" ||
-    request.nextUrl.pathname === "/forgot-password";
+    request.nextUrl.pathname === "/forgot-password" ||
+    request.nextUrl.pathname === "/privacy-policy" ||
+    request.nextUrl.pathname === "/terms-of-service";
 
   // Redirect to login if accessing protected routes without token
   if (!token && !isPublicPath && !isAuthPath) {

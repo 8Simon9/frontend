@@ -16,6 +16,12 @@ body,
   transition: 0.2s linear all;
 }
 
+html {
+  font-size: 16px; /* Explicitly set base font size */
+  text-size-adjust: 100%; /* Prevent automatic text resizing on mobile */
+  -webkit-text-size-adjust: 100%;
+}
+
 .radial-bg {
   background: radial-gradient(
     66% 50% at 50% 50%,
