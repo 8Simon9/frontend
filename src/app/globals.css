@@ -17,26 +17,28 @@ body,
 }
 
 html {
-  font-size: 16px; /* Explicitly set base font size */
-  text-size-adjust: 100%; /* Prevent automatic text resizing on mobile */
+  font-size: 18px;
+  /* Explicitly set base font size */
+  text-size-adjust: 100%;
+  /* Prevent automatic text resizing on mobile */
   -webkit-text-size-adjust: 100%;
 }
 
 .radial-bg {
-  background: radial-gradient(
-    66% 50% at 50% 50%,
-    hsl(0 0% 0%/ 0.55) 54%,
-    hsl(0 0% 0%) 100%
-  );
+  background: radial-gradient(66% 50% at 50% 50%,
+      hsl(0 0% 0%/ 0.55) 54%,
+      hsl(0 0% 0%) 100%);
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   /* display: none; <- Crashes Chrome on hover */
   -webkit-appearance: none;
-  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+  margin: 0;
+  /* <-- Apparently some margin are still there even though it's hidden */
 }
 
 input[type="number"] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
+  /* Firefox */
 }

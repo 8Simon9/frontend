@@ -3,7 +3,7 @@ import ProviderWrapper from "@/components/ProviderWrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VisualTrade",
+  title: "QuantEmpowerAI",
   description: "The best trading platform",
 };
 
