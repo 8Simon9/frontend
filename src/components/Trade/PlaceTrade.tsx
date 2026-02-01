@@ -29,7 +29,21 @@ const PlaceTrade: React.FC<{
   const [limitPrice, setLimitPrice] = useState("");
 
   // Get data from Redux store
-  const { selectedFeed, selectedPair, isLoading, selectedPairPrice } = trade;
+  const {
+    selectedFeed,
+    selectedPair,
+    isLoading,
+    selectedPairPrice,
+    priceUpdated,
+    selectedPairPriceFor,
+  } = trade;
+
+  // NEW: Validate that current price matches selected pair
+  const isPriceValid =
+    priceUpdated &&
+    selectedPairPriceFor === selectedPair &&
+    selectedPairPrice.bid > 0 &&
+    selectedPairPrice.ask > 0;
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -318,12 +332,47 @@ const PlaceTrade: React.FC<{
           </div>
         )}
 
+        {successMessage && (
+          <div className="bg-green-900/30 border border-green-500 text-green-500 rounded p-2 mt-4">
+            {successMessage}
+          </div>
+        )}
+
+        {/* NEW: Show loading state when waiting for price data */}
+        {!isPriceValid && selectedPair && (
+          <div className="bg-blue-900/30 border border-blue-500 text-blue-300 rounded p-2 mt-4 flex items-center">
+            <svg
+              className="animate-spin h-4 w-4 mr-2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Loading price data for {selectedPair}...
+          </div>
+        )}
+
         <button
           disabled={
             isLoading ||
             isSubmitting ||
             margin > balance + credit ||
-            balance + credit <= 0 // Only checks if <= 0
+            balance + credit <= 0 ||
+            !isPriceValid || // NEW: Disable if price is not valid for current pair
+            !priceUpdated // NEW: Disable if price hasn't updated yet
           }
           className="w-full flex justify-between mt-8 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"
           onMouseEnter={() => setIsHoveringBuy(true)}
@@ -333,21 +382,17 @@ const PlaceTrade: React.FC<{
           <p className="font-bold text-white">
             {isSubmitting && activeTab === "open" ? "SUBMITTING..." : "BUY"}
           </p>
-          <p className="text-white">{buyPrice}</p>
+          <p className="text-white">{isPriceValid ? buyPrice : "Loading..."}</p>
         </button>
-
-        {/* {balance <= 0 && (
-          <div className="bg-yellow-900/30 border border-yellow-500 text-yellow-500 rounded p-2 mt-4">
-            Deposit funds required. Cannot trade on credit alone.
-          </div>
-        )} */}
 
         <button
           disabled={
             isLoading ||
             isSubmitting ||
             margin > balance + credit ||
-            balance + credit <= 0 // Only checks if <= 0
+            balance + credit <= 0 ||
+            !isPriceValid || // NEW: Disable if price is not valid for current pair
+            !priceUpdated // NEW: Disable if price hasn't updated yet
           }
           className="w-full flex justify-between mt-6 px-3 py-2 bg-blue-500 shadow-lg disabled:opacity-70 rounded-md hover:bg-blue-600 active:bg-blue-700 transition-colors duration-200"
           onMouseEnter={() => setIsHoveringSell(true)}
@@ -357,7 +402,9 @@ const PlaceTrade: React.FC<{
           <p className="font-bold text-white">
             {isSubmitting && activeTab === "open" ? "SUBMITTING..." : "SELL"}
           </p>
-          <p className="text-white">{sellPrice}</p>
+          <p className="text-white">
+            {isPriceValid ? sellPrice : "Loading..."}
+          </p>
         </button>
 
         {activeTab === "limit" && (

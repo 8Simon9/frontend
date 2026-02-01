@@ -13,6 +13,7 @@ interface InitialState {
   transactions: Transaction[];
   chartSymbol: string;
   isCalculate: boolean;
+  selectedPairPriceFor: string; // NEW: Track which pair the current price belongs to
 }
 
 const initialState: InitialState = {
@@ -28,6 +29,7 @@ const initialState: InitialState = {
   transactions: [],
   chartSymbol: "FX:EURUSD",
   isCalculate: false,
+  selectedPairPriceFor: "",
 };
 
 const tradeSlice = createSlice({
@@ -36,15 +38,26 @@ const tradeSlice = createSlice({
   reducers: {
     setSelectedFeed: (state, action) => {
       state.selectedFeed = action.payload;
+      // Reset price data when feed changes
+      state.selectedPairPrice = { bid: 0, ask: 0 };
+      state.priceUpdated = false;
+      state.selectedPairPriceFor = "";
     },
     setSelectedPair: (state, action) => {
       state.selectedPair = action.payload;
+      // Reset price data when pair changes
+      state.selectedPairPrice = { bid: 0, ask: 0 };
+      state.priceUpdated = false;
+      state.selectedPairPriceFor = "";
     },
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },
     setSelectedPairPrice: (state, action) => {
       state.selectedPairPrice = action.payload;
+      // Mark as updated and track which pair this price is for
+      state.priceUpdated = true;
+      state.selectedPairPriceFor = state.selectedPair;
     },
     setSelectedTransaction: (state, action) => {
       state.selectedTransaction = action.payload;
