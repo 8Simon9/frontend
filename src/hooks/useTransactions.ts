@@ -60,7 +60,8 @@ export const useTransactions = () => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/transactions?page=${page}`, {
+      // const response = await fetch(`/api/transactions?page=${page}`, {
+      const response = await fetch(`/api/transactions`, {
         credentials: "include",
       });
 

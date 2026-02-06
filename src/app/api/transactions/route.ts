@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
     // Forward the request to the external API with the token
     const response = await fetch(
+      // `${process.env.NEXT_PUBLIC_BASE_URL}/account/transactions/${page}/`,
       `${process.env.NEXT_PUBLIC_BASE_URL}/account/transactions/${page}/`,
       {
         method: "GET",

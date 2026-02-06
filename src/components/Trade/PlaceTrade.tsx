@@ -67,9 +67,9 @@ const PlaceTrade: React.FC<{
 
   // Helper function to update margin based on quantity and leverage
   const updateMarginFromQuantity = (qty: number) => {
-    // Correct margin calculation: position size / leverage
-    const newMargin = qty / leverage;
-    setMargin(newMargin);
+    // This is for display purposes - showing required margin
+    const requiredMargin = qty / leverage;
+    setMargin(requiredMargin);
   };
 
   // Handle quantity changes with balance validation
@@ -165,7 +165,7 @@ const PlaceTrade: React.FC<{
         meta_data: {
           pair: pairName,
           leverage: leverage,
-          margin: margin,
+          margin: quantity,
           quantity: quantity, // Add quantity to meta_data
           order_type: activeTab === "open" ? "market" : "limit",
           boughtAt: price.toString(),
@@ -326,11 +326,11 @@ const PlaceTrade: React.FC<{
           </div>
         )}
 
-        {successMessage && (
+        {/* {successMessage && (
           <div className="bg-green-900/30 border border-green-500 text-green-500 rounded p-2 mt-4">
             {successMessage}
           </div>
-        )}
+        )} */}
 
         {successMessage && (
           <div className="bg-green-900/30 border border-green-500 text-green-500 rounded p-2 mt-4">

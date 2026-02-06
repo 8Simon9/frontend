@@ -227,12 +227,15 @@ export const useRealTimePLCalculator = (transactions: Transaction[]) => {
             const leverage = parseFloat(transaction.meta_data.leverage || "1");
             const margin = transaction.meta_data.margin
               ? parseFloat(transaction.meta_data.margin)
-              : tradeSize / leverage;
-
-            // For calculating quantity
-            const quantity = transaction.meta_data.quantity
-              ? transaction.meta_data.quantity
               : tradeSize;
+
+            // console.log(
+            //   "===transaction metadata margin====",
+            //   transaction.meta_data.margin
+            // );
+
+            // Calculate actual position size in units of the asset
+            const positionSize = (tradeSize * leverage) / openPrice;
 
             // Calculate price difference based on position type (BUY or SELL)
             let priceDiff = 0;
@@ -245,9 +248,41 @@ export const useRealTimePLCalculator = (transactions: Transaction[]) => {
               priceDiff = openPrice - currentPrice.ask;
             }
 
-            // Calculate P/L amount and percentage
-            const pnlAmount = (priceDiff / openPrice) * quantity * leverage;
+            // Calculate P/L amount: price change * position size
+            const pnlAmount = priceDiff * positionSize;
             const pnlPercentage = (pnlAmount / margin) * 100;
+
+            // Comprehensive logging
+            //             console.log(`
+            // === P/L Calculation for Transaction ${transaction.id} ===
+            // Pair: ${transaction.meta_data.pair}
+            // Type: ${transaction.type}
+            // ---
+            // Open Price: ${openPrice}
+            // Current Bid: ${currentPrice.bid}
+            // Current Ask: ${currentPrice.ask}
+            // ---
+            // Trade Size: $${tradeSize}
+            // Leverage: ${leverage}x
+            // Margin: $${margin}
+            // ---
+            // Position Size: ${positionSize} units
+            // Price Diff: ${priceDiff}
+            // ---
+            // P/L Amount: $${pnlAmount}
+            // P/L Percentage: ${pnlPercentage}%
+            // ---
+            // Calculation Steps:
+            // 1. Position Size = (${tradeSize} * ${leverage}) / ${openPrice} = ${positionSize}
+            // 2. Price Diff = ${
+            //               transaction.type === "BUY"
+            //                 ? `${currentPrice.bid} - ${openPrice}`
+            //                 : `${openPrice} - ${currentPrice.ask}`
+            //             } = ${priceDiff}
+            // 3. P/L Amount = ${priceDiff} * ${positionSize} = ${pnlAmount}
+            // 4. P/L % = (${pnlAmount} / ${margin}) * 100 = ${pnlPercentage}%
+            // ==========================================
+            //           `);
 
             newPLData[transaction.id] = {
               amount: pnlAmount,
@@ -268,90 +303,6 @@ export const useRealTimePLCalculator = (transactions: Transaction[]) => {
       });
 
       setPLData(newPLData);
-
-      // Process liquidations if needed
-      if (transactionsToLiquidate.length > 0) {
-        // Process each transaction that needs to be liquidated
-        // transactionsToLiquidate.forEach(async (transaction) => {
-        //   // Mark as processing to prevent duplicate liquidations
-        //   setProcessingLiquidation((prev) => ({
-        //     ...prev,
-        //     [transaction.id]: true,
-        //   }));
-        //   try {
-        //     // Get the current price for this transaction's pair
-        //     const pairCode =
-        //       selectedFeed === "crypto"
-        //         ? transaction.meta_data.pair.replace("/", "")
-        //         : transaction.meta_data.pair;
-        //     const currentPriceData = priceData[pairCode];
-        //     if (!currentPriceData) {
-        //       console.error(`No price data available for ${pairCode}`);
-        //       return;
-        //     }
-        //     // Use bid for SELL positions and ask for BUY positions (inverse of opening)
-        //     const currentPrice =
-        //       transaction.type === "BUY"
-        //         ? currentPriceData.bid
-        //         : currentPriceData.ask;
-        //     // The loss equals the user's total funds (balance + credit)
-        //     const exactLoss = -userTotalFunds;
-        //     // Calculate percentage loss (always -100% in this case)
-        //     const tradeSize = transaction.price;
-        //     const leverage = parseFloat(transaction.meta_data.leverage || "1");
-        //     const margin = transaction.meta_data.margin
-        //       ? parseFloat(transaction.meta_data.margin)
-        //       : tradeSize / leverage;
-        //     const percentageLoss = (exactLoss / margin) * 100;
-        //     // Call the API to close the position
-        //     const result = await closeTradeAutomatically(
-        //       transaction,
-        //       currentPrice,
-        //       exactLoss,
-        //       percentageLoss
-        //     );
-        //     if (result) {
-        //       // Update the transaction list - mark as closed
-        //       const updatedTransactions = transactions.map((t) => {
-        //         if (t.id === transaction.id) {
-        //           return {
-        //             ...t,
-        //             closed: true,
-        //             meta_data: {
-        //               ...t.meta_data,
-        //               closedAt: currentPrice.toString(),
-        //               profitLoss: exactLoss, // Loss equals user's total funds
-        //               profitLossPercentage: percentageLoss, // 100% loss
-        //             },
-        //           };
-        //         }
-        //         return t;
-        //       });
-        //       // Update redux state
-        //       dispatch(setTransactions(updatedTransactions));
-        //       // Set balance to zero and credit to negative
-        //       dispatch(setBalance(0));
-        //       dispatch(setCredit(-credit));
-        //       // Fetch updated profile details to ensure all state is in sync
-        //       dispatch(fetchProfileDetails());
-        //       console.log(
-        //         `Transaction ${transaction.id} auto-closed due to insufficient funds`
-        //       );
-        //     }
-        //   } catch (error) {
-        //     console.error(
-        //       `Failed to auto-close transaction ${transaction.id}:`,
-        //       error
-        //     );
-        //   } finally {
-        //     // Reset processing state regardless of outcome
-        //     setProcessingLiquidation((prev) => ({
-        //       ...prev,
-        //       [transaction.id]: false,
-        //     }));
-        //   }
-        // });
-      }
     }
   }, [priceData, transactions, selectedFeed, balance, credit, dispatch]);
 
